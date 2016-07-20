@@ -11,11 +11,13 @@ import (
 	"tantan/g"
 	"tantan/handler"
 	"tantan/service"
+	"tantan/user"
 )
 
 const (
 	ErrnoOK int = iota
 	ErrnoConfigParseFailed
+	ErrnoUserInitFailed
 	ErrnoHTTPStartFailed
 )
 
@@ -34,6 +36,12 @@ func main() {
 	if err != nil {
 		log.Printf("configuration file parse error: %v\n", err)
 		os.Exit(ErrnoConfigParseFailed)
+	}
+
+	err = user.Init()
+	if err != nil {
+		log.Printf("user init error: %v\n", err)
+		os.Exit(ErrnoUserInitFailed)
 	}
 
 	s := &service.Server{
