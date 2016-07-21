@@ -1,12 +1,7 @@
 package user
 
 import (
-	"crypto/md5"
 	"fmt"
-	"io"
-	"math/rand"
-	"strconv"
-	"time"
 
 	"gopkg.in/pg.v4"
 )
@@ -17,13 +12,11 @@ type User struct {
 	Type string
 }
 
-type Users []User
-
 var db *pg.DB
 
-func createSchema(db *pg.DB) error {
+func createSchema() error {
 	queries := []string{
-		`CREATE TABLE users (id serial primary key, name text)`,
+		`CREATE TABLE users (id serial primary key, name text, type text)`,
 		`CREATE TABLE relationships (id serial primary key, liked integer[], matched integer[], disliked integer[])`,
 	}
 	for _, q := range queries {
@@ -40,25 +33,7 @@ func Init() error {
 		User: "postgres",
 	})
 
-	err := createSchema(db)
-	if err != nil {
-		return err
-	}
 	return nil
-}
-
-func Md5(text string) string {
-	m := md5.New()
-	io.WriteString(m, text)
-	return fmt.Sprintf("%x", m.Sum(nil))
-}
-
-func getUid() string {
-	nano := time.Now().UnixNano()
-	rand.Seed(nano)
-	n := rand.Int63()
-	id := Md5(Md5(strconv.FormatInt(nano, 10)) + Md5(strconv.FormatInt(n, 10)))
-	return id
 }
 
 func (u *User) String() string {
@@ -79,6 +54,8 @@ func (u *User) Create() error {
 	return nil
 }
 
-func (us *Users) List() error {
-	return nil
+func GetUsers() ([]User, error) {
+	var users []User
+	_, err := db.Query(&users, `SELECT * FROM users`)
+	return users, err
 }

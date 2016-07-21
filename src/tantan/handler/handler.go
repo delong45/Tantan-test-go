@@ -6,9 +6,41 @@ import (
 	"io/ioutil"
 	"net/http"
 	"tantan/user"
+	"tantan/utils"
 )
 
+type UserResp struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+	Type string `json:"type"`
+}
+
 func UserList(w http.ResponseWriter, r *http.Request) {
+	var users []user.User
+	users, err := user.GetUsers()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Server internal error: %v\n", err)
+		return
+	}
+
+	var us []UserResp
+	for _, u := range users {
+		ur := UserResp{
+			Id:   utils.GetString(u.Id),
+			Name: u.Name,
+			Type: u.Type,
+		}
+		us = append(us, ur)
+	}
+
+	response, err := json.Marshal(us)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Server internal error: %v\n", err)
+		return
+	}
+	fmt.Fprintf(w, "%s", response)
 }
 
 func UserCreate(w http.ResponseWriter, r *http.Request) {
@@ -35,7 +67,13 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := json.Marshal(u)
+	ur := UserResp{
+		Id:   utils.GetString(u.Id),
+		Name: u.Name,
+		Type: u.Type,
+	}
+
+	response, err := json.Marshal(ur)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "Server internal error: %v\n", err)
